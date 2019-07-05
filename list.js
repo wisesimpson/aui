@@ -48,45 +48,6 @@ const getTranslateY=element=>{
     }
 }
 
-const setSpaceWithoutDisturbing=(element,space,defaultSpace=0)=>{
-    let currentSpace=getSpace(element)
-    setSpace(element,space,defaultSpace)
-    if(element.nextElementSibling)
-        changeSpace(element.nextElementSibling,currentSpace-space)
-    if(element.myAnimation){
-        let transform=getComputedStyle(element).transform
-        let transformType=transform.substring(0,transform.indexOf('('))
-        console.log(transformType)
-        let end=''
-        if(transformType=='matrix'){
-            end='matrix(1,0,0,1,0,0)'
-        }else if(transformType=='matrix3d'){
-            end='matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)'
-        }
-        element.myAnimation.cancel()
-        element.myAnimation=element.animate([{
-            transform:transform
-        },{
-            transform:end
-        }],{
-            duration:1000,
-            easing:'ease-in-out'
-        })
-    }else{
-        element.myAnimation=element.animate([{
-            transform:'translate3d(0,'+(-space)+'px,0)'
-        },{
-            transform:'translate3d(0,0,0)'
-        }],{
-            duration:1000,
-            easing:'ease-in-out'
-        })
-    }
-    element.myAnimation.finished.then(a=>{
-        delete a.effect.target.myAnimation
-    })
-}
-
 const isAttached=element=>getBottomSpace(element)==0
 
 const nextAttachedElement=element=>{
