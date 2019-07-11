@@ -4,28 +4,88 @@
     <meta charset="utf-8"/>
     <script src="list.js" type="module"></script>
     <style>
+      body{
+          font-family:sans-serif;
+      }
       ul{
           list-style:none;
       }
       li{
-	  position:relative;
+          position:relative;
           margin-top:20px;
       }
       li>div{
-          padding:4em;
-	  background:#eee;
+          font-size:2em;
+          color:rgba(0,0,0,0.2);
+          padding:2em;
+          background:#eee;
           border:1px solid #ddd;
       }
+      form{
+          margin:2em 0;
+      }
     </style>
+    <script>
+      window.addEventListener('load',()=>{
+          window.defaultSpace=parseFloat(getComputedStyle(document.querySelector('li')).marginTop)
+          console.log(defaultSpace)
+      })
+      function getSpeed(){
+          return 0.8*parseFloat(document.querySelector('[name=speed]:checked').value)
+      }
+      function getLi(id){
+          return document.querySelector('li[data-id="'+parseInt(id)+'"]')
+      }
+    </script>
   </head>
   <body>
-    <ul>
-      <li><div>A</div></li>
-      <li style="background:#ede2c9"><div>B</div></li>
-      <li><div>C</div></li>
-      <li><div>D</div></li>
-      <li><div>E</div></li>
-      <li><div>F</div></li>
-    </ul>
+    <div style="display:flex">
+      <ul style="flex:auto 1 1">
+        <li data-id="1"><div>1</div></li>
+        <li data-id="2"><div style="background:#faf3e1">2</div></li>
+        <li data-id="3"><div>3</div></li>
+        <li data-id="4"><div>4</div></li>
+        <li data-id="5"><div>5</div></li>
+        <li data-id="6"><div>6</div></li>
+      </ul>
+      <section style="margin-inline-start:50px;">
+
+        <label><input type="radio" name="speed" value="1" checked/> normal</label>
+        <label><input type="radio" name="speed" value="0.1"/> Slow-mo</label>
+
+        <form onsubmit="event.preventDefault();
+                        remove(getLi(this.querySelector('[name=id]').value),defaultSpace,getSpeed())">
+          Remove <input name="id" value="1"/> <input type="submit"/>
+        </form>
+
+        <form onsubmit="event.preventDefault();
+			let position=this.querySelector('[name=position]').value;
+                        move(getLi(this.querySelector('[name=id1]').value),position,getLi(this.querySelector('[name=id2]').value),defaultSpace,getSpeed())">
+          Move <input name="id1" value="1"/> <select name="position"><option value="after">after</option><option value="before">before</option></select> <input name="id2" value="6"/>
+          <input type="submit"/>
+        </form>
+
+        <form onsubmit="event.preventDefault();
+                        let id1=this.querySelector('[name=id1]').value;
+                        let li=document.createElement('li');
+                        li.dataset.id=id1;
+                        li.innerHTML='<div>'+id1+'</div>';
+			let position=this.querySelector('[name=position]').value;
+                        insert(li,position,getLi(this.querySelector('[name=id2]').value),defaultSpace,getSpeed())">
+          Insert a new item <input name="id1" value="10"/> <select name="position"><option value="after">after</option><option value="before">before</option></select> <input name="id2" value="1"/>
+          <input type="submit"/>
+        </form>
+
+	<form onsubmit="event.preventDefault();
+                        let a=this.querySelector('[name=list]').value.split(',');
+			let list=[];
+			a.forEach(item=>{list.push({id:item.trim()})});
+			syncList(list,document.querySelector('ul'),'id',item=>{let element=document.createElement('li');element.innerHTML='<div>'+item.id+'</div>';return element},getSpeed());">
+          Sync data <textarea name="list" value="6,5,4,3,2,1"></textarea>
+          <input type="submit"/>
+        </form>
+
+      </section>
+    </div>
   </body>
 </html>

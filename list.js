@@ -63,6 +63,10 @@ const nextAttachedElement=element=>{
     }
 }
 
+const firstAttachedChild=list=>Array.from(list.children).find(element=>isAttached(element))
+
+const lastAttachedChild=list=>Array.from(list.children).reverse().find(element=>isAttached(element))
+
 const detach=(element,defaultSpace=0)=>{
     if(isAttached(element)){
         let space=getSpace(element)
@@ -90,7 +94,7 @@ const attach=(element,defaultSpace=0)=>{
     }
 }
 
-const neutralizeWithoutDisturbing=(element,defaultSpace=0)=>{
+const neutralizeWithoutDisturbing=(element,defaultSpace=0,speed=0.8)=>{
     if(isAttached(element)){
         let space=getSpace(element)
         if(space!=defaultSpace){
@@ -129,19 +133,50 @@ const neutralizeWithoutDisturbing=(element,defaultSpace=0)=>{
     }
 }
 
-const chainNeutralize=(element,defaultSpace=0)=>{
+const chainNeutralize=(element,defaultSpace=0,speed=0.8)=>{
     if(element){
-        neutralizeWithoutDisturbing(element,defaultSpace)
+        neutralizeWithoutDisturbing(element,defaultSpace,speed)
         let next=nextAttachedElement(element)
         if(next){
-            wait(reactionTime,next,defaultSpace).then(params=>{
-                chainNeutralize(params[0],params[1])
+            wait(reactionTime,next,defaultSpace,speed).then(params=>{
+                chainNeutralize(params[0],params[1],params[2])
             })
         }
     }
 }
 
-window.remove=(element,defaultSpace=0)=>{
+window.sneakIn=(element,speed=0.8)=>{
+    element.style.opacity=0
+
+    element.style.height=0
+    element.style.overflowY='hidden'
+    element.removeAttribute('hidden')
+    let height=element.scrollHeight
+    return element.animate([{
+	height:0
+    },{
+	height:height+'px'
+    }],{
+	duration:height/speed
+    }).finished.then(a=>{
+	let element=a.effect.target
+	element.style.opacity=''
+	element.style.height=''
+	element.style.overflowY=''
+	return element
+    })
+}
+
+window.fadeIn=element=>
+    element.animate([{
+	opacity:0
+    },{
+	opacity:1
+    }],{
+	duration:300
+    }).finished.then(a=>a.effect.target)
+
+window.remove=(element,defaultSpace=0,speed=0.8)=>{
     detach(element,defaultSpace)
     if(element.myAnimation){
         element.myAnimation.pause()
@@ -153,58 +188,150 @@ window.remove=(element,defaultSpace=0)=>{
     }],{
         duration:300
     }).finished.then(a=>{
-        chainNeutralize(nextAttachedElement(a.effect.target),defaultSpace)
+        chainNeutralize(nextAttachedElement(a.effect.target),defaultSpace,speed)
         a.effect.target.remove()
     })
 }
 
-window.insertAfter=(element,previousElement,defaultSpace=0)=>{
-    let height=element.offsetHeight
-    if(height){
-        if(element!=previousElement.nextElementSibling){
-            let nextElementSibling=element.nextElementSibling
-            let offset=element.offsetTop-previousElement.offsetTop-previousElement.offsetHeight-getSpace(element)
+window.insert=(newElement,position='after',reference,defaultSpace=0,speed=1)=>{
+    newElement.style.opacity=0
+    newElement.style.height=0
+    newElement.style.overflowY='hidden'
+    reference.insertAdjacentElement(position=='after'?'afterend':'beforebegin',newElement)
+    let height=newElement.scrollHeight
+    setSpace(newElement,defaultSpace)
+    newElement.style.height=''
+    newElement.style.overflowY=''
+    setBottomSpace(newElement,-defaultSpace-height)
+    attach(newElement,defaultSpace)
 
-            detach(element,defaultSpace)
-            previousElement.insertAdjacentElement('afterend',element)
-            setOffset(element,offset,defaultSpace)
-            attach(element,defaultSpace)
+    chainNeutralize(nextAttachedElement(newElement),defaultSpace,speed)
+    
+    wait(height/speed,newElement).then(params=>{
+        let element=params[0]
+        element.style.opacity=''
+        element.myAnimation=element.animate([{
+            opacity:0
+        },{
+            opacity:1
+        }],{
+            duration:300/speed,
+        })
+        element.myAnimation.finished.then(a=>{
+            delete a.effect.target.myAnimation
+        }).catch(reason=>{
+            console.log([2,reason])
+        })
+    })	
+}
 
-            chainNeutralize(nextElementSibling,defaultSpace)
-            chainNeutralize(element,defaultSpace)
-        }
+window.move=(element,position='after',reference,defaultSpace=0,speed=1)=>{
+    if((position=='after'&&element!=nextAttachedElement(reference))||
+       (position=='before'&&nextAttachedElement(element)!=reference)){
+	let next=nextAttachedElement(element)
+	let offset=element.offsetTop-reference.offsetTop-reference.offsetHeight-getSpace(element)
+	detach(element,defaultSpace)
+	reference.insertAdjacentElement(position=='after'?'afterend':'beforebegin',element)
+	setOffset(element,offset,defaultSpace)
+	attach(element,defaultSpace)
+
+	chainNeutralize(next,defaultSpace,speed)
+	chainNeutralize(element,defaultSpace,speed)
+    }	
+}
+
+window.append=(container,newElement,defaultSpace=0,speed=1)=>{
+    let last=lastAttachedChild(container)
+    if(last){
+	insert(newElement,'after',last,defaultSpace,speed)
     }else{
-        element.style.opacity=0
-
-        element.style.height=0
-        element.style.overflowY='hidden'
-        previousElement.insertAdjacentElement('afterend',element)
-        height=element.scrollHeight
-        setSpace(element,defaultSpace)
-        element.style.height=''
-        element.style.overflowY=''
-        setBottomSpace(-defaultSpace-height)
-        attach(element,defaultSpace)
-
-        chainNeutralize(element.nextElementSibling,defaultSpace)
-        
-        wait(height/speed,element).then(params=>{
+	newElement.style.opacity=0
+	container.insertAdjacentElement('beforeend',newElement)
+	wait(100/speed,newElement).then(params=>{
             let element=params[0]
             element.style.opacity=''
             element.myAnimation=element.animate([{
-                opacity:0
+		opacity:0
             },{
-                opacity:1
+		opacity:1
             }],{
-                duration:300,
+		duration:300/speed,
             })
             element.myAnimation.finished.then(a=>{
-                delete a.effect.target.myAnimation
+		delete a.effect.target.myAnimation
             }).catch(reason=>{
-                console.log([2,reason])
+		console.log([3,reason])
             })
-        })
+	})
     }
 }
 
+window.swap=(element1,element2,defaultSpace=0,speed=0.8)=>{
 
+}
+
+window.syncListItems=(list,element,key,createElement,defaultSpace,speed=1)=>{
+    if(element){
+	if(!defaultSpace)
+	    defaultSpace=parseFloat(getComputedStyle(element).marginTop)
+	list.forEach((item,i)=>{
+	    console.log([item,element])
+	    if(element){
+		if(item[key]==element.dataset[key]){
+		    element=element.nextElementSibling
+		}else{
+		    let nextSiblings=[]
+		    let nextSibling=element.nextElementSibling
+		    while(nextSibling){
+			nextSiblings.push(nextSibling)
+			nextSibling=nextSibling.nextElementSibling
+		    }
+		    let j=nextSiblings.findIndex(element=>item[key]==element.dataset[key])
+		    if(j==-1){
+			let newElement=createElement(item)
+			newElement.dataset[key]=item[key]
+			insert(newElement,'before',element,defaultSpace,speed)
+		    }else{
+			if(list[i+j+1][key]==element.dataset[key]){
+			    swap(element,nextSiblings[j])
+			    element=nextSiblings[j].nextElementSibling
+			}else{
+			    insert(nextSiblings[j],'before',element,defaultSpace,speed)
+			}
+		    }
+		}
+	    }else{
+		let newElement=createElement(item)
+		newElement.dataset[key]=item[key]
+		append(list,newElement,defaultSpace,speed)
+	    }
+	})
+    }
+    return element
+}
+
+window.syncList=(list,container,key,createElement,speed=1)=>{
+    if(container.firstElementChild){
+	let defaultSpace=parseFloat(getComputedStyle(container.firstElementChild).marginTop)
+	let element=syncListItems(list,container.firstElementChild,key,createElement,defaultSpace,speed)
+	while(element){
+	    remove(element,defaultSpace,speed)
+	    element=element.nextElementSibling
+	}
+    }else{
+	if(list.length>0){
+	    let newElement=createElement(list[0])
+	    newElement.dataset[key]=list[0][key]
+	    append(newElement,container,null,speed)
+	}
+	let defaultSpace=parseFloat(getComputedStyle(container.firstElementChild).marginTop)
+	let leftover=syncListItems(list,container.firstElementChild,key,createElement,defaultSpace,speed)
+	while(leftover){
+	    remove(leftover,defaultSpace,speed)
+	    leftovet=leftover.nextElementSibling
+	}
+    }
+}
+    
+
+		
