@@ -84,21 +84,12 @@
           <input type="submit"/>
         </form>
 
-        <form onsubmit="event.preventDefault();
-                        let a=this.querySelector('[name=list]').value.split(',');
-                        let list=[];
-                        a.forEach(item=>{list.push({id:item.trim()})});
-                        syncList(list,document.querySelector('ul'),'id',item=>{let element=document.createElement('li');element.innerHTML='<div>'+item.id+'</div>';return element},getSpeed());">
-          Sync data <textarea name="list" value="6,5,4,3,2,1"></textarea>
-          <input type="submit"/>
-        </form>
-
 	<form onsubmit="event.preventDefault();
                         let a=this.querySelector('[name=list]').value.split(',');
-                        let list=[];
-                        a.forEach(item=>{list.push({id:item.trim()})});
-                        syncListItems(list,getLi(this.querySelector('[name=id]').value),'id',item=>{let element=document.createElement('li');element.innerHTML='<div>'+item.id+'</div>';return element},getSpeed());">
-          Sync data <textarea name="list" value="6,5,4,3,2,1"></textarea> from <input name="id" value="1"/>
+                        let data=[];
+                        a.forEach(item=>{data.push({id:item.trim()})});
+                        syncList(data,document.querySelector('ul'),parseInt(this.querySelector('[name=index]').value),item=>{let element=document.createElement('li');element.innerHTML='<div>'+item.id+'</div>';return element},'id',defaultSpace,getSpeed());">
+          Sync data <textarea name="list" value="6,5,4,3,2,1"></textarea> from <input name="index" value="0"/>
           <input type="submit"/>
 	</form>
 

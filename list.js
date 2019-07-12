@@ -293,69 +293,50 @@ window.swap=(element1,element2,defaultSpace=0,speed=1)=>{
 	move(element2,'before',next,defaultSpace,speed)
     }
 }
-
-window.syncListItems=(list,element,key,createElement,defaultSpace,speed=1)=>{
-    if(element){
-	let container=element.parentNode
-	if(!defaultSpace)
-	    defaultSpace=parseFloat(getComputedStyle(element).marginTop)
-	list.forEach((item,i)=>{
-	    if(element){
-		if(item[key]==element.dataset[key]){
-		    element=element.nextElementSibling
-		}else{
-		    let nextSiblings=[]
-		    let nextSibling=element.nextElementSibling
-		    while(nextSibling){
-			nextSiblings.push(nextSibling)
-			nextSibling=nextSibling.nextElementSibling
-		    }
-		    let j=nextSiblings.findIndex(element=>item[key]==element.dataset[key])
-		    if(j==-1){
-			let newElement=createElement(item)
-			newElement.dataset[key]=item[key]
-			insert(newElement,'before',element,defaultSpace,speed)
-		    }else{
-			if(list.length>i+j+1&&list[i+j+1][key]==element.dataset[key]){
-			    swap(element,nextSiblings[j],defaultSpace,speed)
-			    element=nextSiblings[j].nextElementSibling
-			}else{
-			    move(nextSiblings[j],'before',element,defaultSpace,speed)
-			}
-		    }
-		}
-	    }else{
-		let newElement=createElement(item)
-		newElement.dataset[key]=item[key]
-		append(container,newElement,defaultSpace,speed)
-	    }
-	})
-    }
-    return element
-}
-
-window.syncList=(list,container,key,createElement,speed=1)=>{
-    if(container.firstElementChild){
-	let defaultSpace=parseFloat(getComputedStyle(container.firstElementChild).marginTop)
-	let element=syncListItems(list,container.firstElementChild,key,createElement,defaultSpace,speed)
-	while(element){
-	    remove(element,defaultSpace,speed)
-	    element=element.nextElementSibling
-	}
-    }else{
-	if(list.length>0){
-	    let newElement=createElement(list[0])
-	    newElement.dataset[key]=list[0][key]
-	    append(container,newElement,null,speed)
-	}
-	let defaultSpace=parseFloat(getComputedStyle(container.firstElementChild).marginTop)
-	let leftover=syncListItems(list,container.firstElementChild,key,createElement,defaultSpace,speed)
-	while(leftover){
-	    remove(leftover,defaultSpace,speed)
-	    leftovet=leftover.nextElementSibling
-	}
+ 
+window.syncList=(data,container,start=0,createElement,key='id',defaultSpace=0,speed=1)=>{
+    if(start<=container.childElementCount){
+        let element=container.children.item(start)
+        data.forEach((item,i)=>{
+            if(element){
+                if(item[key]==element.dataset[key]){
+                    element=element.nextElementSibling
+                }else{
+                    let j=0
+                    let sameElement=false
+                    let next=element.nextElementSibling
+                    while(next){
+                        j++
+                        if(item[key]==next.dataset[key]){
+                            sameElement=next
+                            break
+                        }else{
+                            next=next.nextElementSibling
+                        }
+                    }
+                    if(sameElement){
+                        if(data.length>i+j && data[i+j][key]==element.dataset[key]){
+                            swap(element,sameElement,defaultSpace,speed)
+                            element=sameElement.nextElementSibling
+                        }else{
+                            move(sameElement,'before',element,defaultSpace,speed)
+                        }
+                    }else{
+                        let newElement=createElement(item)
+                        newElement.dataset[key]=item[key]
+                        insert(newElement,'before',element,defaultSpace,speed)
+                    }
+                }
+            }else{
+                let newElement=createElement(item)
+                newElement.dataset[key]=item[key]
+                append(container,newElement,defaultSpace,speed)
+            }
+        })
+        while(element){
+            let temp=element
+            element=element.nextElementSibling
+            remove(temp,defaultSpace,speed)
+        }
     }
 }
-    
-
-		
