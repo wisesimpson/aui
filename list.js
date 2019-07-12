@@ -65,7 +65,11 @@ const nextAttachedElement=element=>{
 
 const firstAttachedChild=list=>Array.from(list.children).find(element=>isAttached(element))
 
-const lastAttachedChild=list=>Array.from(list.children).reverse().find(element=>isAttached(element))
+const lastAttachedChild=list=>{
+    console.log(list)
+    console.log(list.children)
+    return Array.from(list.children).reverse().find(element=>isAttached(element))
+}
 
 const detach=(element,defaultSpace=0)=>{
     if(isAttached(element)){
@@ -145,7 +149,7 @@ const chainNeutralize=(element,defaultSpace=0,speed=0.8)=>{
     }
 }
 
-window.sneakIn=(element,speed=0.8)=>{
+window.sneakIn=(element,speed=1)=>{
     element.style.opacity=0
 
     element.style.height=0
@@ -206,7 +210,6 @@ window.insert=(newElement,position='after',reference,defaultSpace=0,speed=1)=>{
     attach(newElement,defaultSpace)
 
     chainNeutralize(nextAttachedElement(newElement),defaultSpace,speed)
-    
     wait(height/speed,newElement).then(params=>{
         let element=params[0]
         element.style.opacity=''
@@ -229,7 +232,9 @@ window.move=(element,position='after',reference,defaultSpace=0,speed=1)=>{
     if((position=='after'&&element!=nextAttachedElement(reference))||
        (position=='before'&&nextAttachedElement(element)!=reference)){
 	let next=nextAttachedElement(element)
-	let offset=element.offsetTop-reference.offsetTop-reference.offsetHeight-getSpace(element)
+	let offset=position=='after'?
+	    element.offsetTop-reference.offsetTop-reference.offsetHeight-getSpace(element):
+	    element.offsetTop-reference.offsetTop+getSpace(reference)-getSpace(element)
 	detach(element,defaultSpace)
 	reference.insertAdjacentElement(position=='after'?'afterend':'beforebegin',element)
 	setOffset(element,offset,defaultSpace)
@@ -266,16 +271,35 @@ window.append=(container,newElement,defaultSpace=0,speed=1)=>{
     }
 }
 
-window.swap=(element1,element2,defaultSpace=0,speed=0.8)=>{
-
+window.swap=(element1,element2,defaultSpace=0,speed=1)=>{
+    let isAfter=false
+    let element=element1.nextElementSibling
+    while(element){
+	if(element==element2){
+	    isAfter=true
+	    break
+	}else{
+	    element=element.nextElementSibling
+	}
+    }
+    if(!isAfter){
+	let temp=element1
+	element1=element2
+	element2=temp
+    }
+    let next=nextAttachedElement(element1)
+    move(element1,'after',element2,defaultSpace,speed)
+    if(next!=element2){
+	move(element2,'before',next,defaultSpace,speed)
+    }
 }
 
 window.syncListItems=(list,element,key,createElement,defaultSpace,speed=1)=>{
     if(element){
+	let container=element.parentNode
 	if(!defaultSpace)
 	    defaultSpace=parseFloat(getComputedStyle(element).marginTop)
 	list.forEach((item,i)=>{
-	    console.log([item,element])
 	    if(element){
 		if(item[key]==element.dataset[key]){
 		    element=element.nextElementSibling
@@ -292,18 +316,18 @@ window.syncListItems=(list,element,key,createElement,defaultSpace,speed=1)=>{
 			newElement.dataset[key]=item[key]
 			insert(newElement,'before',element,defaultSpace,speed)
 		    }else{
-			if(list[i+j+1][key]==element.dataset[key]){
-			    swap(element,nextSiblings[j])
+			if(list.length>i+j+1&&list[i+j+1][key]==element.dataset[key]){
+			    swap(element,nextSiblings[j],defaultSpace,speed)
 			    element=nextSiblings[j].nextElementSibling
 			}else{
-			    insert(nextSiblings[j],'before',element,defaultSpace,speed)
+			    move(nextSiblings[j],'before',element,defaultSpace,speed)
 			}
 		    }
 		}
 	    }else{
 		let newElement=createElement(item)
 		newElement.dataset[key]=item[key]
-		append(list,newElement,defaultSpace,speed)
+		append(container,newElement,defaultSpace,speed)
 	    }
 	})
     }
@@ -322,7 +346,7 @@ window.syncList=(list,container,key,createElement,speed=1)=>{
 	if(list.length>0){
 	    let newElement=createElement(list[0])
 	    newElement.dataset[key]=list[0][key]
-	    append(newElement,container,null,speed)
+	    append(container,newElement,null,speed)
 	}
 	let defaultSpace=parseFloat(getComputedStyle(container.firstElementChild).marginTop)
 	let leftover=syncListItems(list,container.firstElementChild,key,createElement,defaultSpace,speed)

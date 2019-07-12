@@ -59,7 +59,7 @@
         </form>
 
         <form onsubmit="event.preventDefault();
-			let position=this.querySelector('[name=position]').value;
+                        let position=this.querySelector('[name=position]').value;
                         move(getLi(this.querySelector('[name=id1]').value),position,getLi(this.querySelector('[name=id2]').value),defaultSpace,getSpeed())">
           Move <input name="id1" value="1"/> <select name="position"><option value="after">after</option><option value="before">before</option></select> <input name="id2" value="6"/>
           <input type="submit"/>
@@ -70,20 +70,37 @@
                         let li=document.createElement('li');
                         li.dataset.id=id1;
                         li.innerHTML='<div>'+id1+'</div>';
-			let position=this.querySelector('[name=position]').value;
+                        let position=this.querySelector('[name=position]').value;
                         insert(li,position,getLi(this.querySelector('[name=id2]').value),defaultSpace,getSpeed())">
           Insert a new item <input name="id1" value="10"/> <select name="position"><option value="after">after</option><option value="before">before</option></select> <input name="id2" value="1"/>
           <input type="submit"/>
         </form>
 
-	<form onsubmit="event.preventDefault();
+        <form onsubmit="event.preventDefault();
+                        let e1=getLi(this.querySelector('[name=id1]').value);
+                        let e2=getLi(this.querySelector('[name=id2]').value);
+                        swap(e1,e2,defaultSpace,getSpeed())">
+          Swap <input name="id1" value="1"/> <input name="id2" value="4"/>
+          <input type="submit"/>
+        </form>
+
+        <form onsubmit="event.preventDefault();
                         let a=this.querySelector('[name=list]').value.split(',');
-			let list=[];
-			a.forEach(item=>{list.push({id:item.trim()})});
-			syncList(list,document.querySelector('ul'),'id',item=>{let element=document.createElement('li');element.innerHTML='<div>'+item.id+'</div>';return element},getSpeed());">
+                        let list=[];
+                        a.forEach(item=>{list.push({id:item.trim()})});
+                        syncList(list,document.querySelector('ul'),'id',item=>{let element=document.createElement('li');element.innerHTML='<div>'+item.id+'</div>';return element},getSpeed());">
           Sync data <textarea name="list" value="6,5,4,3,2,1"></textarea>
           <input type="submit"/>
         </form>
+
+	<form onsubmit="event.preventDefault();
+                        let a=this.querySelector('[name=list]').value.split(',');
+                        let list=[];
+                        a.forEach(item=>{list.push({id:item.trim()})});
+                        syncListItems(list,getLi(this.querySelector('[name=id]').value),'id',item=>{let element=document.createElement('li');element.innerHTML='<div>'+item.id+'</div>';return element},getSpeed());">
+          Sync data <textarea name="list" value="6,5,4,3,2,1"></textarea> from <input name="id" value="1"/>
+          <input type="submit"/>
+	</form>
 
       </section>
     </div>
