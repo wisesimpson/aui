@@ -1,4 +1,4 @@
-const wait=(ms,...params)=>new Promise(resolve=>setTimeout(resolve,ms,params))
+import './utilities.js'
 
 const speed=0.8
 const reactionTime=50
@@ -149,63 +149,6 @@ const chainNeutralize=(element,defaultSpace=0,speed=0.8)=>{
     }
 }
 
-window.sneakIn=(element,speed=1)=>{
-    element.style.opacity=0
-    element.style.height=0
-    element.style.overflowY='hidden'
-    element.removeAttribute('hidden')
-    let height=element.scrollHeight
-    return element.animate([{
-	height:0
-    },{
-	height:height+'px'
-    }],{
-	duration:height/speed
-    }).finished.then(a=>{
-	let element=a.effect.target
-	element.style.opacity=''
-	element.style.height=''
-	element.style.overflowY=''
-	return element
-    })
-}
-
-window.sneakOut=(element,speed=1)=>{
-    let height=element.offsetHeight
-    return element.animate([{
-	height:height+'px',
-	overflowY:'hidden'
-    },{
-	height:0,
-	overflowY:'hidden'
-    }],{
-	duration:height/speed
-    }).finished.then(a=>{
-	return a.effect.target
-    })
-}
-
-window.fadeIn=element=>
-    element.animate([{
-	opacity:0
-    },{
-	opacity:1
-    }],{
-	duration:300
-    }).finished.then(a=>a.effect.target)
-
-window.fadeOut=element=>
-    element.animate([{
-	opacity:1
-    },{
-	opacity:0
-    }],{
-	duration:300
-    }).finished.then(a=>{
-	a.effect.target.style.opacity=0
-	return a.effect.target
-    })
-
 window.remove=(element,defaultSpace=0,speed=0.8)=>{
     detach(element,defaultSpace)
     if(element.myAnimation){
@@ -251,49 +194,49 @@ window.insert=(newElement,position='after',reference,defaultSpace=0,speed=1)=>{
         }).catch(reason=>{
             console.log([2,reason])
         })
-    })	
+    })
 }
 
 window.move=(element,position='after',reference,defaultSpace=0,speed=1)=>{
     if((position=='after'&&element!=nextAttachedElement(reference))||
        (position=='before'&&nextAttachedElement(element)!=reference)){
-	let next=nextAttachedElement(element)
-	let offset=position=='after'?
-	    element.offsetTop-reference.offsetTop-reference.offsetHeight-getSpace(element):
-	    element.offsetTop-reference.offsetTop+getSpace(reference)-getSpace(element)
-	detach(element,defaultSpace)
-	reference.insertAdjacentElement(position=='after'?'afterend':'beforebegin',element)
-	setOffset(element,offset,defaultSpace)
-	attach(element,defaultSpace)
+        let next=nextAttachedElement(element)
+        let offset=position=='after'?
+            element.offsetTop-reference.offsetTop-reference.offsetHeight-getSpace(element):
+            element.offsetTop-reference.offsetTop+getSpace(reference)-getSpace(element)
+        detach(element,defaultSpace)
+        reference.insertAdjacentElement(position=='after'?'afterend':'beforebegin',element)
+        setOffset(element,offset,defaultSpace)
+        attach(element,defaultSpace)
 
-	chainNeutralize(next,defaultSpace,speed)
-	chainNeutralize(element,defaultSpace,speed)
-    }	
+        chainNeutralize(next,defaultSpace,speed)
+        chainNeutralize(element,defaultSpace,speed)
+    }
 }
 
 window.append=(container,newElement,defaultSpace=0,speed=1)=>{
     let last=lastAttachedChild(container)
     if(last){
-	insert(newElement,'after',last,defaultSpace,speed)
+        insert(newElement,'after',last,defaultSpace,speed)
     }else{
-	newElement.style.opacity=0
-	container.insertAdjacentElement('beforeend',newElement)
-	wait(100/speed,newElement).then(params=>{
+        newElement.style.opacity=0
+        container.insertAdjacentElement('beforeend',newElement)
+        wait(100/speed,newElement).then(params=>{
             let element=params[0]
             element.style.opacity=''
             element.myAnimation=element.animate([{
-		opacity:0
+                opacity:0
             },{
-		opacity:1
+                opacity:1
             }],{
-		duration:300/speed,
+                duration:300/speed,
             })
             element.myAnimation.finished.then(a=>{
-		delete a.effect.target.myAnimation
+                delete a.effect.target.myAnimation
             }).catch(reason=>{
-		console.log([3,reason])
+                console.log([3,reason])
             })
-	})
+        })
     }
 }
 
@@ -301,22 +244,22 @@ window.swap=(element1,element2,defaultSpace=0,speed=1)=>{
     let isAfter=false
     let element=element1.nextElementSibling
     while(element){
-	if(element==element2){
-	    isAfter=true
-	    break
-	}else{
-	    element=element.nextElementSibling
-	}
+        if(element==element2){
+            isAfter=true
+            break
+        }else{
+            element=element.nextElementSibling
+        }
     }
     if(!isAfter){
-	let temp=element1
-	element1=element2
-	element2=temp
+        let temp=element1
+        element1=element2
+        element2=temp
     }
     let next=nextAttachedElement(element1)
     move(element1,'after',element2,defaultSpace,speed)
     if(next!=element2){
-	move(element2,'before',next,defaultSpace,speed)
+        move(element2,'before',next,defaultSpace,speed)
     }
 }
 
