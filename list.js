@@ -151,7 +151,6 @@ const chainNeutralize=(element,defaultSpace=0,speed=0.8)=>{
 
 window.sneakIn=(element,speed=1)=>{
     element.style.opacity=0
-
     element.style.height=0
     element.style.overflowY='hidden'
     element.removeAttribute('hidden')
@@ -171,6 +170,21 @@ window.sneakIn=(element,speed=1)=>{
     })
 }
 
+window.sneakOut=(element,speed=1)=>{
+    let height=element.offsetHeight
+    return element.animate([{
+	height:height+'px',
+	overflowY:'hidden'
+    },{
+	height:0,
+	overflowY:'hidden'
+    }],{
+	duration:height/speed
+    }).finished.then(a=>{
+	return a.effect.target
+    })
+}
+
 window.fadeIn=element=>
     element.animate([{
 	opacity:0
@@ -179,6 +193,18 @@ window.fadeIn=element=>
     }],{
 	duration:300
     }).finished.then(a=>a.effect.target)
+
+window.fadeOut=element=>
+    element.animate([{
+	opacity:1
+    },{
+	opacity:0
+    }],{
+	duration:300
+    }).finished.then(a=>{
+	a.effect.target.style.opacity=0
+	return a.effect.target
+    })
 
 window.remove=(element,defaultSpace=0,speed=0.8)=>{
     detach(element,defaultSpace)
@@ -293,7 +319,7 @@ window.swap=(element1,element2,defaultSpace=0,speed=1)=>{
 	move(element2,'before',next,defaultSpace,speed)
     }
 }
- 
+
 window.syncList=(data,container,start=0,createElement,key='id',defaultSpace=0,speed=1)=>{
     if(start<=container.childElementCount){
         let element=container.children.item(start)
