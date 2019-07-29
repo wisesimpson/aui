@@ -1,3 +1,5 @@
+import './polyfill.js'
+
 window.wait=(ms,...params)=>new Promise(resolve=>setTimeout(resolve,ms,params))
 
 window.fadeIn=element=>
