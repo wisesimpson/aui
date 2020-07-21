@@ -1,5 +1,5 @@
-if(Animation){
-    if(!('finished' in Animation)){
+if(typeof Animation =='function'){
+    if(!Animation.prototype.hasOwnProperty('finished')){
         Object.defineProperty(Animation.prototype,'finished',{
             get(){
                 return this.playStat==='finished'?

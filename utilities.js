@@ -1,6 +1,41 @@
 import './polyfill.js'
 
-window.wait=(ms,...params)=>new Promise(resolve=>setTimeout(resolve,ms,params))
+export const wait=(ms,...params)=>new Promise(resolve=>setTimeout(resolve,ms,params))
+
+export const animate=(element,keyframes,options)=>{
+    if(!element.myAnimations){
+        element.myAnimations=[]
+    }
+    let animation=element.animate(keyframes,options)
+    element.myAnimations.push(animation)
+    return animation
+}
+
+export const pauseAnimations=element=>{
+    if(element.myAnimations){
+        element.myAnimations.forEach(animation=>{
+            animation.pause()
+        })
+    }
+}
+
+export const cancelAnimations=element=>{
+    // if(element.myAnimations){
+	element.myAnimations.forEach(animation=>{
+            animation.cancel()
+	})
+	delete element.myAnimations
+    // }
+}
+
+export const getScale=element=>{
+    let transform=getComputedStyle(element).transform
+    if(transform=='none'){
+        return false
+    }else{
+        return 'scale('+transform.match(/\(([^,]*),/)[1]+')'
+    }
+}
 
 window.fadeIn=element=>
     element.animate([{
